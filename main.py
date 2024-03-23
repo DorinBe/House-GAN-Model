@@ -1,4 +1,3 @@
-import argparse
 import os
 import numpy as np
 import torchvision.transforms as transforms
@@ -8,14 +7,17 @@ import torch
 from models.models import Generator
 from misc.utils import _init_input, ID_COLOR, draw_masks, draw_graph
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--n_cpu", type=int, default=16, help="number of cpu threads to use during batch generation")
-parser.add_argument("--batch_size", type=int, default=1, help="size of the batches")
-parser.add_argument("--checkpoint", type=str, default='./checkpoints/pretrained.pth', help="checkpoint path")
-parser.add_argument("--data_path", type=str, default='./data/sample_list.txt', help="path to dataset list file")
-parser.add_argument("--out", type=str, default='./dump', help="output folder")
-opt = parser.parse_args()
-print(opt)
+class Options:
+    def __init__(self):
+        self.n_cpu = 16  # number of cpu threads to use during batch generation
+        self.batch_size = 1  # size of the batches
+        # checkpoint path
+        self.checkpoint = "checkpoints\pretrained.pth"
+        # path to dataset list file
+        self.data_path = "data/empty.txt"
+        self.out = './dump'  # output folder
+
+opt = Options()
 
 # Create output dir
 os.makedirs(opt.out, exist_ok=True)
@@ -87,4 +89,4 @@ def main(event, context):
         save_image(imk, './{}/fp_final_{}.png'.format(opt.out, i), nrow=1, normalize=False)
         
 if __name__ == '__main__':
-    main()
+    main({"name":0},"hi")
