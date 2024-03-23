@@ -59,8 +59,6 @@ def conv_block(in_channels, out_channels, k, s, p, act=None, upsample=False, spe
 				block.append(torch.nn.ReLU(True))
 		elif "tanh":
 				block.append(torch.nn.Tanh())
-		elif "None":
-			continue
 
 		return block
 
