@@ -20,7 +20,7 @@ class Options:
 opt = Options()
 
 # Create output dir
-os.makedirs(opt.out, exist_ok=True)
+# os.makedirs(opt.out, exist_ok=True)
 
 # Initialize generator and discriminator
 model = Generator()
@@ -86,7 +86,7 @@ def main(event, context):
         # save final floorplans
         imk = draw_masks(masks.copy(), real_nodes)
         imk = torch.tensor(np.array(imk).transpose((2, 0, 1)))/255.0 
-        save_image(imk, './{}/fp_final_{}.png'.format(opt.out, i), nrow=1, normalize=False)
+        # save_image(imk, './{}/fp_final_{}.png'.format(opt.out, i), nrow=1, normalize=False)
         
 if __name__ == '__main__':
     main({"name":0},"hi")
