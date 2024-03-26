@@ -5,7 +5,7 @@ from torchvision.utils import save_image
 from dataset.floorplan_dataset_maps_functional_high_res import FloorplanGraphDataset, floorplan_collate_fn
 import torch
 from models.models import Generator
-from misc.utils import _init_input, ID_COLOR, draw_masks, draw_graph
+from misc.utils import _init_input, draw_masks, draw_graph
 
 class Options:
     def __init__(self):
