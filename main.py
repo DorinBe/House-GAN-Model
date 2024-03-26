@@ -66,7 +66,7 @@ def main(event, context):
         # add room types incrementally
         _types = sorted(list(set(real_nodes)))
         selected_types = [_types[:k+1] for k in range(10)]
-        os.makedirs('./{}/'.format(opt.out), exist_ok=True)
+        # os.makedirs('./{}/'.format(opt.out), exist_ok=True) // for the mean time
         _round = 0
         
         # initialize layout
