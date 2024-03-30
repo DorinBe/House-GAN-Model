@@ -6,6 +6,9 @@ from dataset.floorplan_dataset_maps_functional_high_res import FloorplanGraphDat
 import torch
 from models.models import Generator
 from misc.utils import _init_input, draw_masks, draw_graph
+from google.cloud import storage
+import io
+
 
 class Options:
     def __init__(self):
@@ -17,20 +20,26 @@ class Options:
         self.data_path = "data/empty.txt"
         self.out = './dump'  # output folder
 
+def get_from_cloud():
+    storage_client = storage.Client()
+    bucket_name = "pretrainedmodel"
+    blob_name = "pretrained.pth"
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    content = blob.download_as_bytes()
+    return content
+
 opt = Options()
-
-# Create output dir
+content = get_from_cloud()
+buffer = io.BytesIO(content)
 # os.makedirs(opt.out, exist_ok=True)
-
-# Initialize generator and discriminator
 model = Generator()
-model.load_state_dict(torch.load(opt.checkpoint), strict=True)
+model.load_state_dict(torch.load(buffer), strict=True)
 model = model.eval()
 
 # Initialize variables
 if torch.cuda.is_available():
     model.cuda()
-
 # initialize dataset iterator
 fp_dataset_test = FloorplanGraphDataset(opt.data_path, transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
 fp_loader = torch.utils.data.DataLoader(fp_dataset_test, 
@@ -66,7 +75,7 @@ def main(event, context):
         # add room types incrementally
         _types = sorted(list(set(real_nodes)))
         selected_types = [_types[:k+1] for k in range(10)]
-        # os.makedirs('./{}/'.format(opt.out), exist_ok=True) // for the mean time
+        # os.makedirs('./{}/'.format(opt.out), exist_ok=True) # for the mean time
         _round = 0
         
         # initialize layout
