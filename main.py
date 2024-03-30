@@ -13,6 +13,7 @@ from flask import send_file
 import json
 
 app = flask.Flask(__name__)
+#comment
 
 def get_from_cloud():
     """Model is saved in cloud to save space in the cotainer. This function downloads the model from the cloud."""
