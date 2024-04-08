@@ -15,15 +15,15 @@ import json
 app = flask.Flask(__name__)
 #comment
 
-def get_from_cloud():
-    """Model is saved in cloud to save space in the cotainer. This function downloads the model from the cloud."""
-    storage_client = storage.Client()
-    bucket_name = "pretrainedmodel"
-    blob_name = "pretrained.pth"
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-    content = blob.download_as_bytes()
-    return content
+# def get_from_cloud():
+#     """Model is saved in cloud to save space in the cotainer. This function downloads the model from the cloud."""
+#     storage_client = storage.Client()
+#     bucket_name = "pretrainedmodel"
+#     blob_name = "pretrained.pth"
+#     bucket = storage_client.bucket(bucket_name)
+#     blob = bucket.blob(blob_name)
+#     content = blob.download_as_bytes()
+#     return content
 
 # run inference
 def _infer(graph, model, prev_state=None):
@@ -32,36 +32,36 @@ def _infer(graph, model, prev_state=None):
     z, given_masks_in, given_nds, given_eds = _init_input(graph, prev_state)
     # run inference model
     with torch.no_grad():
-        masks = model(z.to('cuda'), given_masks_in.to('cuda'), given_nds.to('cuda'), given_eds.to('cuda'))
+        masks = model(z.to('cpu'), given_masks_in.to('cpu'), given_nds.to('cpu'), given_eds.to('cpu'))
         masks = masks.detach().cpu().numpy()
     return masks
 
-@app.route('/generate', methods=['POST'])
+# @app.route('/generate', methods=['POST'])
 def generate():
-    my_data = flask.request.json
+    # my_data = flask.request.json
     file_path = 'data/myjson.json'
-    with open(file_path, 'w') as json_file:
-        json.dump(my_data, json_file)
-    # create txt file
-    with open('data/mytext.txt', 'w') as f:
-        f.write(file_path+'\n')
+    # with open(file_path, 'w') as json_file:
+    #     json.dump(my_data, json_file)
+    # # create txt file
+    # with open('data/mytext.txt', 'w') as f:
+    #     f.write(file_path+'\n')
 
     class Options:
         def __init__(self):
-            self.out = './dump'  # output folder
+            self.out = './dump'  # output folder 
 
     opt = Options()
-    content = get_from_cloud()
-    buffer = io.BytesIO(content)
+    # content = get_from_cloud()
+    # buffer = io.BytesIO(content)
     model = Generator()
-    model.load_state_dict(torch.load(buffer), strict=True)
+    model.load_state_dict(torch.load("checkpoints\pretrained.pth", map_location=torch.device('cpu')), strict=True)
     model = model.eval()
 
     # Initialize variables
-    if torch.cuda.is_available():
-        model.cuda()
+    # if torch.cuda.is_available():
+    #     model.cuda()
     # initialize dataset iterator
-    fp_dataset_test = FloorplanGraphDataset(r"data\mytext.txt", transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
+    fp_dataset_test = FloorplanGraphDataset(r"data\empty.txt", transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
     fp_loader = torch.utils.data.DataLoader(fp_dataset_test, 
                                             batch_size=1, 
                                             shuffle=False, collate_fn=floorplan_collate_fn)
@@ -106,5 +106,6 @@ def generate():
         img_io.seek(0)
         return send_file(img_io, mimetype='image/png')
 
+generate()
 # app.run(host='0.0.0.0', port=8080)
-app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
+# app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)

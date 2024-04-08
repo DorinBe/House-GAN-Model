@@ -14,6 +14,7 @@ COPY . /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+EXPOSE 8080
 # Define environment variable
 # ENV NAME World
 # CD app
