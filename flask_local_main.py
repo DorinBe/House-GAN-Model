@@ -6,11 +6,12 @@ from dataset.floorplan_dataset_maps_functional_high_res import FloorplanGraphDat
 import torch
 from models.models import Generator
 from misc.utils import _init_input, draw_masks, draw_graph
-from google.cloud import storage
 import io
 import flask
 from flask import send_file
 import json
+from checkpoints.checkpoints import pretrained_path
+from data.data import dir_path
 
 app = flask.Flask(__name__)
 #comment
@@ -36,15 +37,15 @@ def _infer(graph, model, prev_state=None):
         masks = masks.detach().cpu().numpy()
     return masks
 
-# @app.route('/generate', methods=['POST'])
+@app.route('/generate', methods=['POST'])
 def generate():
-    # my_data = flask.request.json
+    my_data = flask.request.json
     file_path = 'data/myjson.json'
-    # with open(file_path, 'w') as json_file:
-    #     json.dump(my_data, json_file)
-    # # create txt file
-    # with open('data/mytext.txt', 'w') as f:
-    #     f.write(file_path+'\n')
+    with open(file_path, 'w') as json_file:
+        json.dump(my_data, json_file)
+    # create txt file
+    with open('data/mytext.txt', 'w') as f:
+        f.write(file_path+'\n')
 
     class Options:
         def __init__(self):
@@ -54,14 +55,14 @@ def generate():
     # content = get_from_cloud()
     # buffer = io.BytesIO(content)
     model = Generator()
-    model.load_state_dict(torch.load("checkpoints\pretrained.pth", map_location=torch.device('cpu')), strict=True)
+    model.load_state_dict(torch.load(pretrained_path, map_location=torch.device('cpu')), strict=True)
     model = model.eval()
 
     # Initialize variables
     # if torch.cuda.is_available():
     #     model.cuda()
     # initialize dataset iterator
-    fp_dataset_test = FloorplanGraphDataset(r"data\empty.txt", transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
+    fp_dataset_test = FloorplanGraphDataset(os.path.join(dir_path, "empty.txt"), transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
     fp_loader = torch.utils.data.DataLoader(fp_dataset_test, 
                                             batch_size=1, 
                                             shuffle=False, collate_fn=floorplan_collate_fn)
@@ -88,7 +89,7 @@ def generate():
         masks = _infer(graph, model, state)
         im0 = draw_masks(masks.copy(), real_nodes)
         im0 = torch.tensor(np.array(im0).transpose((2, 0, 1)))/255.0 
-        save_image(im0, './{}/fp_init_{}.png'.format(opt.out, i), nrow=1, normalize=False) # visualize init image
+        # save_image(im0, './{}/fp_init_{}.png'.format(opt.out, i), nrow=1, normalize=False) # visualize init image
 
         # generate per room type
         for _iter, _types in enumerate(selected_types):
@@ -103,9 +104,11 @@ def generate():
 
         img_io = io.BytesIO()
         save_image(imk, img_io, format='PNG', nrow=1, normalize=False)
+
+        # save locally on computer
+        save_image(imk, './{}/fp_{}.png'.format(opt.out, i), format='PNG', nrow=1, normalize=False)
         img_io.seek(0)
         return send_file(img_io, mimetype='image/png')
 
-generate()
-# app.run(host='0.0.0.0', port=8080)
-# app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
+if __name__ == "__main__":
+    app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)

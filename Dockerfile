@@ -1,22 +1,25 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-RUN apt-get update && \
-    apt-get install -y libglib2.0-0 libgl1-mesa-glx && \
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphviz \
+    libgraphviz-dev \
+    gcc \
+    libc-dev \
+    libglib2.0-0 \
+    libgl1-mesa-glx \
+    --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
-WORKDIR /app
-
-# # Copy the current directory contents into the container at /app
-COPY . /app
+COPY . $APP_HOME
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8080
-# Define environment variable
-# ENV NAME World
-# CD app
+
 # Run app.py when the container launches
-CMD ["python3", "main.py"]
+CMD ["python3", "flask_local_main.py"]
