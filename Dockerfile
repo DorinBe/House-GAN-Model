@@ -19,7 +19,7 @@ COPY . $APP_HOME
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8080
+# EXPOSE 8080
 
 # Run app.py when the container launches
-CMD ["python3", "flask_local_main.py"]
+CMD ["python3", "storage_flask_main.py"]

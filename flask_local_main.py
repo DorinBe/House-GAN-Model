@@ -10,7 +10,7 @@ import io
 import flask
 from flask import send_file
 import json
-from checkpoints.checkpoints import pretrained_path
+# from checkpoints.checkpoints import pretrained_path
 from data.data import dir_path
 
 app = flask.Flask(__name__)
@@ -110,5 +110,4 @@ def generate():
         img_io.seek(0)
         return send_file(img_io, mimetype='image/png')
 
-if __name__ == "__main__":
-    app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
+app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)

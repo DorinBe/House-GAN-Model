@@ -96,6 +96,4 @@ def generate():
         img_io.seek(0)
         return send_file(img_io, mimetype='image/png')
 
-if __name__ == "__main__":
-    # generate()
-    app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
+app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
