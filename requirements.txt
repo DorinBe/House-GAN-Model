@@ -10,3 +10,4 @@ matplotlib==3.6.2
 webcolors==1.13
 Flask
 pygraphviz==1.11
+google-cloud-storage==2.10.0
