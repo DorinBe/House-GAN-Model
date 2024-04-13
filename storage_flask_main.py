@@ -58,9 +58,9 @@ def generate():
         real_nodes = np.where(nds.detach().cpu()==1)[-1]
         graph = [nds, eds]
         true_graph_obj, graph_im = draw_graph([real_nodes, eds.detach().cpu().numpy()])
-        graph_img_io = io.BytesIO()
-        save_image(graph_im, graph_img_io, format='PNG', nrow=1, normalize=False)
-        graph_img_io.seek(0)
+        # graph_img_io = io.BytesIO()
+        # save_image(graph_im, graph_img_io, format='PNG', nrow=1, normalize=False)
+        # graph_img_io.seek(0)
         # graph_im.save('./{}/graph_{}.png'.format(opt.out, i)) # save graph
 
         # add room types incrementally
