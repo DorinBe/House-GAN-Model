@@ -10,9 +10,8 @@ import io
 import flask
 from flask import send_file
 import json
-from data.data import dir_path
+from data.data import myjsonpath, mytextpath
 from google.cloud import storage
-from dump.dump import dump_path
 
 app = flask.Flask(__name__)
 def get_from_cloud():
@@ -35,12 +34,11 @@ def _infer(graph, model, prev_state=None):
 @app.route('/generate', methods=['POST'])
 def generate():
     my_data = flask.request.json
-    file_path = 'data/myjson.json'
-    with open(file_path, 'w') as json_file:
-        json.dump(my_data, json_file)
+    with open(myjsonpath, 'w') as json_file:
+        json.dump(my_data, json_file) # model have to read from json file
     # create txt file
-    with open('data/mytext.txt', 'w') as f:
-        f.write(file_path+'\n')
+    with open(mytextpath, 'w') as f:
+        f.write(myjsonpath+'\n') # model have to read from txt file the jsons
 
     content = get_from_cloud()
     buffer = io.BytesIO(content)
@@ -48,12 +46,10 @@ def generate():
     model.load_state_dict(torch.load(buffer, map_location=torch.device('cpu')), strict=True)
     model = model.eval()
 
-    fp_dataset_test = FloorplanGraphDataset(os.path.join(dir_path, "empty.txt"), transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
+    fp_dataset_test = FloorplanGraphDataset(mytextpath, transforms.Normalize(mean=[0.5], std=[0.5]), split='test')
     fp_loader = torch.utils.data.DataLoader(fp_dataset_test, 
                                             batch_size=1, 
                                             shuffle=False, collate_fn=floorplan_collate_fn)
-    # optimizers
-    Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
     globalIndex = 0
     for i, sample in enumerate(fp_loader):
@@ -62,6 +58,9 @@ def generate():
         real_nodes = np.where(nds.detach().cpu()==1)[-1]
         graph = [nds, eds]
         true_graph_obj, graph_im = draw_graph([real_nodes, eds.detach().cpu().numpy()])
+        graph_img_io = io.BytesIO()
+        save_image(graph_im, graph_img_io, format='PNG', nrow=1, normalize=False)
+        graph_img_io.seek(0)
         # graph_im.save('./{}/graph_{}.png'.format(opt.out, i)) # save graph
 
         # add room types incrementally
@@ -74,8 +73,7 @@ def generate():
         state = {'masks': None, 'fixed_nodes': []}
         masks = _infer(graph, model, state)
         im0 = draw_masks(masks.copy(), real_nodes)
-        im0 = torch.tensor(np.array(im0).transpose((2, 0, 1)))/255.0 
-        # save_image(im0, './{}/fp_init_{}.png'.format(opt.out, i), nrow=1, normalize=False) # visualize init image
+        im0 = torch.tensor(np.array(im0).transpose((2, 0, 1)))/255.0
 
         # generate per room type
         for _iter, _types in enumerate(selected_types):
@@ -87,13 +85,10 @@ def generate():
         # save final floorplans
         imk = draw_masks(masks.copy(), real_nodes)
         imk = torch.tensor(np.array(imk).transpose((2, 0, 1)))/255.0 
+        fp_img_io = io.BytesIO()
+        save_image(imk, fp_img_io, format='PNG', nrow=1, normalize=False)
+        fp_img_io.seek(0)
+        return send_file(fp_img_io, mimetype='image/png')
 
-        img_io = io.BytesIO()
-        save_image(imk, img_io, format='PNG', nrow=1, normalize=False)
-
-        # save locally on computer
-        # save_image(imk, './{}/fp_{}.png'.format(opt.out, i), format='PNG', nrow=1, normalize=False)
-        img_io.seek(0)
-        return send_file(img_io, mimetype='image/png')
 
 app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
