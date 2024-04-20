@@ -12,6 +12,8 @@ from flask import send_file
 import json
 from data.data import myjsonpath, mytextpath
 from google.cloud import storage
+from dump.dump import dump_path
+from zipfile import ZipFile
 
 app = flask.Flask(__name__)
 def get_from_cloud():
@@ -58,10 +60,8 @@ def generate():
         real_nodes = np.where(nds.detach().cpu()==1)[-1]
         graph = [nds, eds]
         true_graph_obj, graph_im = draw_graph([real_nodes, eds.detach().cpu().numpy()])
-        # graph_img_io = io.BytesIO()
-        # save_image(graph_im, graph_img_io, format='PNG', nrow=1, normalize=False)
-        # graph_img_io.seek(0)
-        # graph_im.save('./{}/graph_{}.png'.format(opt.out, i)) # save graph
+        graph_path = os.path.join(dump_path, f'graph_{i}.png')
+        graph_im.save(graph_path)
 
         # add room types incrementally
         _types = sorted(list(set(real_nodes)))
@@ -87,8 +87,16 @@ def generate():
         imk = torch.tensor(np.array(imk).transpose((2, 0, 1)))/255.0 
         fp_img_io = io.BytesIO()
         save_image(imk, fp_img_io, format='PNG', nrow=1, normalize=False)
+        image_path = os.path.join(dump_path, f"fp_{i}.png")
+        save_image(imk, image_path, "PNG")
         fp_img_io.seek(0)
-        return send_file(fp_img_io, mimetype='image/png')
+        
+        zip_path = os.path.join(dump_path, f"output.zip")
+        with ZipFile(zip_path, 'w') as zipf:
+            zipf.write(image_path)
+            zipf.write(graph_path)
+
+        return send_file(zip_path, mimetype='application/zip', as_attachment=True)
 
 
 app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)

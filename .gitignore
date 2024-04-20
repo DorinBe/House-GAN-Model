@@ -161,3 +161,4 @@ cython_debug/
 local_main.py
 .vscode/
 flask_local_main.py
+*.json
