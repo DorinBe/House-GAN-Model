@@ -19,7 +19,7 @@ app = flask.Flask(__name__)
 def get_from_cloud():
     """Model is saved in cloud to save space in the cotainer. This function downloads the model from the cloud."""
     storage_client = storage.Client(project="house-gan-model")
-    bucket_name = "checkpoints-12"
+    bucket_name = "checkpoints-14"
     blob_name = "pretrained.pth"
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(blob_name)
@@ -99,4 +99,4 @@ def generate():
         return send_file(zip_path, mimetype='application/zip', as_attachment=True)
 
 
-app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=True)
+app.run(port=int(os.environ.get('PORT', 8080)), host='0.0.0.0',debug=False)
