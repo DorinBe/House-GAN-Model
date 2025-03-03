@@ -3,7 +3,7 @@ torchvision
 torch
 Pillow==9.5.0
 scikit-image==0.21.0
-opencv-python==4.6.0.66
+opencv-python==4.8.1.78
 networkx==3.1
 svgwrite==1.4.3
 matplotlib==3.6.2
